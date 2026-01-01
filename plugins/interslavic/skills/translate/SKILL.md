@@ -85,27 +85,46 @@ Total: 1 match
 
 ## Instructions for Translation
 
-When asked to translate text:
+### Translating INTO Interslavic
 
-1. **Identify the source language** from context or ask the user
-2. **Use the dictionary lookup tool** to find translations:
+When the user asks to translate text into Interslavic:
+
+1. **Look up every content word** in the input text using the dictionary:
    ```bash
-   python ./translate.py <word>
+   python ./translate.py <word1> <word2> <word3> ...
    ```
-3. **For phrases**, look up individual content words
-4. **Present translations** clearly with all available language variants
+   Run the script on all words to find their Interslavic equivalents.
 
-### Example Workflow
+2. **Use Latin script by default.** Output Interslavic in Roman/Latin characters unless the user explicitly requests Cyrillic.
 
-User asks: "How do you say 'water' in Interslavic?"
+3. **For grammar and sentence construction:**
+   - The dictionary provides individual word translations, not grammatical rules
+   - When unsure about correct Interslavic grammar (verb conjugations, noun declensions, word order), draw on your knowledge of other Slavic languages
+   - Aim for constructions that maximize mutual intelligibility across the Slavic language family
+   - When in doubt, prefer forms that are common across multiple Slavic languages (e.g., SVO word order is widely understood)
 
-1. Run: `python ./translate.py water`
-2. Find the ISV entry: `voda`
-3. Respond with the translation and additional context if helpful
+4. **Handle ambiguity:** If multiple dictionary entries match, choose the one whose meaning best fits the context. Consider the part of speech (noun, verb, adjective) indicated in the results.
+
+### Translating FROM Interslavic
+
+When translating Interslavic text to another language:
+
+1. Look up ISV words in the dictionary to find equivalents in the target language
+2. The dictionary includes translations for EN, RU, UK, PL, CS, HR, BG, and many other languages
+
+### Single Word Lookups
+
+For simple "How do you say X?" questions:
+
+1. Run: `python ./translate.py <word>`
+2. Present the ISV translation along with related Slavic forms if helpful for context
 
 ### Handling Multiple Matches
 
-The dictionary uses substring matching, so a search may return multiple entries. Review all matches and select the most appropriate based on context.
+The dictionary uses substring matching, so searches may return multiple entries. Review all matches and select the most appropriate based on:
+- Part of speech (partofspeech field)
+- Semantic context
+- Frequency (higher frequency words are more common)
 
 ## About Interslavic
 
