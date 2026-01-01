@@ -1,0 +1,25 @@
+{
+  "name": "esultanik-skills",
+  "owner": {
+    "name": "Evan Sultanik"
+  },
+  "metadata": {
+    "description": "Evan Sultanik's personal Claude Code skills marketplace",
+    "version": "1.0.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "interslavic",
+      "source": "interslavic",
+      "description": "Translation between English, Slavic languages (RU, UK, PL, HR, CZ, BG), and Interslavic",
+      "version": "0.1.0",
+      "author": {
+        "name": "esultanik"
+      },
+      "category": "language",
+      "tags": ["translation", "slavic", "interslavic", "language"],
+      "license": "AGPL-3.0"
+    }
+  ]
+}
