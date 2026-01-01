@@ -6,14 +6,23 @@ A Claude Code plugin for translating between English, major Slavic languages, an
 
 | Code | Language |
 |------|----------|
+| ISV | Interslavic |
 | EN | English |
 | RU | Russian |
+| BE | Belarusian |
 | UK | Ukrainian |
 | PL | Polish |
+| CS | Czech |
+| SK | Slovak |
+| SL | Slovenian |
 | HR | Croatian |
-| CZ | Czech |
+| SR | Serbian |
+| MK | Macedonian |
 | BG | Bulgarian |
-| ISV | Interslavic |
+| CU | Old Church Slavonic |
+| DE | German |
+| NL | Dutch |
+| EO | Esperanto |
 
 ## Installation
 
