@@ -1,9 +1,11 @@
 {
   "name": "interslavic",
-  "description": "Translation between English, Slavic languages, and Interslavic",
-  "version": "0.1.0",
+  "description": "Translation between English, Slavic languages (RU, UK, PL, HR, CZ, BG, etc.), and Interslavic",
+  "category": "language",
+  "tags": ["translation", "slavic", "interslavic", "language"],
+  "version": "0.2.0",
   "author": {
-    "name": "esultanik"
+    "name": "Evan Sultanik"
   },
   "license": "AGPL-3.0",
   "skills": ["./skills/"]

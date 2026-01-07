@@ -126,6 +126,29 @@ The dictionary uses substring matching, so searches may return multiple entries.
 - Semantic context
 - Frequency (higher frequency words are more common)
 
+## Important: Non-Standard ISV Characters
+
+The source dictionary occasionally contains words with non-standard characters borrowed from other Slavic languages (e.g., Polish `ę`, `ą`). When translating INTO Interslavic, replace these with standard Interslavic equivalents:
+
+| Non-standard | Replace with |
+|--------------|--------------|
+| ę | e |
+| ą | a |
+| ų | u |
+| ȯ | o |
+| ė | e |
+| å | a |
+| ń | n |
+| ť | t |
+| ľ | l |
+| ŕ | r |
+| ď | d |
+| ś | s |
+| ź | z |
+| ć | c |
+
+Standard ISV characters (`č`, `š`, `ž`, `ě`) should be preserved.
+
 ## About Interslavic
 
 Interslavic (Medžuslovjansky) is a zonal constructed language designed to be mutually intelligible to speakers of Slavic languages. It serves as a lingua franca for the Slavic world, similar to how Latin functions in Romance language contexts.

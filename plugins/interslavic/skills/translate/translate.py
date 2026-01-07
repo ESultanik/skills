@@ -21,6 +21,37 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Optional, Any
 
+# Character normalization for non-standard ISV characters
+# Maps diacritics to ASCII equivalents for search matching
+NORMALIZATION_MAP = {
+    # Nasal/dotted vowels -> base vowel
+    'ę': 'e', 'ą': 'a', 'ų': 'u', 'ȯ': 'o', 'ė': 'e', 'å': 'a',
+    # Soft consonants -> base consonant
+    'ń': 'n', 'ť': 't', 'ľ': 'l', 'ŕ': 'r', 'ď': 'd',
+    'ś': 's', 'ź': 'z', 'ć': 'c', 'đ': 'dj',
+    # Standard ISV hacek characters -> ASCII (for diacritic-free search)
+    'č': 'c', 'š': 's', 'ž': 'z', 'ě': 'e',
+    # Uppercase variants
+    'Č': 'C', 'Š': 'S', 'Ž': 'Z', 'Ę': 'E', 'Ą': 'A', 'Ų': 'U',
+    'Ń': 'N', 'Ť': 'T', 'Ľ': 'L', 'Ŕ': 'R', 'Ď': 'D',
+    'Ś': 'S', 'Ź': 'Z', 'Ć': 'C', 'Đ': 'DJ',
+}
+
+SCHEMA_VERSION = 2
+
+
+def normalize_text(text: str) -> str:
+    """Normalize diacritical characters to ASCII equivalents.
+
+    Args:
+        text: Input text with potential diacritics.
+
+    Returns:
+        Text with diacritics replaced by ASCII equivalents.
+    """
+    return ''.join(NORMALIZATION_MAP.get(c, c) for c in text)
+
+
 # Google Sheets configuration
 SHEET_ID = "1N79e_yVHDo-d026HljueuKJlAAdeELAiPzdFzdBuKbY"
 GID = "1987833874"
@@ -85,21 +116,32 @@ def init_database(csv_data: str) -> int:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    # Create main table with all columns as TEXT
+    # Create main table with all columns as TEXT plus normalized ISV column
     col_defs = ", ".join(f'"{col}" TEXT' for col in columns)
+    col_defs += ', "isv_normalized" TEXT'
     cursor.execute(f'CREATE TABLE dictionary ({col_defs})')
 
-    # Create FTS5 virtual table for full-text search
+    # Create index on normalized column for faster LIKE searches
+    cursor.execute('CREATE INDEX idx_isv_normalized ON dictionary(isv_normalized)')
+
+    # Create FTS5 virtual table for full-text search (original columns only)
     col_list = ", ".join(f'"{col}"' for col in columns)
     cursor.execute(f'CREATE VIRTUAL TABLE dictionary_fts USING fts5({col_list}, content=dictionary)')
 
-    # Insert data
-    placeholders = ", ".join("?" for _ in columns)
-    insert_sql = f'INSERT INTO dictionary ({col_list}) VALUES ({placeholders})'
+    # Insert data with normalized ISV column
+    col_list_with_norm = col_list + ', "isv_normalized"'
+    placeholders = ", ".join("?" for _ in columns) + ", ?"
+    insert_sql = f'INSERT INTO dictionary ({col_list_with_norm}) VALUES ({placeholders})'
+
+    # Find ISV column index
+    isv_idx = columns.index('isv') if 'isv' in columns else None
 
     row_count = 0
     for row in reader:
         values = [row.get(col, "") or "" for col in reader.fieldnames]
+        # Add normalized ISV value
+        isv_value = values[isv_idx] if isv_idx is not None else ""
+        values.append(normalize_text(isv_value.lower()))
         cursor.execute(insert_sql, values)
         row_count += 1
 
@@ -114,7 +156,8 @@ def init_database(csv_data: str) -> int:
         "last_download": datetime.now().isoformat(),
         "source_url": EXPORT_URL,
         "row_count": row_count,
-        "columns": columns
+        "columns": columns,
+        "schema_version": SCHEMA_VERSION,
     }
     META_PATH.write_text(json.dumps(metadata, indent=2))
 
@@ -143,6 +186,18 @@ def get_columns() -> List[str]:
     return []
 
 
+def needs_schema_update() -> bool:
+    """Check if database schema needs updating.
+
+    Returns:
+        True if schema version is outdated and refresh is needed.
+    """
+    if not META_PATH.exists():
+        return False  # No metadata means no database, will be created fresh
+    metadata = json.loads(META_PATH.read_text())
+    return metadata.get("schema_version", 1) < SCHEMA_VERSION
+
+
 def search(terms: List[str], lang: Optional[str] = None) -> List[Dict[str, Any]]:
     """Search the dictionary for terms using substring matching.
 
@@ -160,20 +215,33 @@ def search(terms: List[str], lang: Optional[str] = None) -> List[Dict[str, Any]]
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    # Get column names
+    # Get column names (excluding internal normalized column)
     cursor.execute("PRAGMA table_info(dictionary)")
-    columns = [row[1] for row in cursor.fetchall()]
+    all_columns = [row[1] for row in cursor.fetchall()]
+    columns = [col for col in all_columns if col != 'isv_normalized']
 
     results = []
     seen_rowids = set()
 
     for term in terms:
-        # Build LIKE conditions for substring matching across all columns
-        # (FTS5 MATCH doesn't do substring matching well, so we use LIKE)
-        like_conditions = " OR ".join(f'"{col}" LIKE ?' for col in columns)
-        like_values = [f"%{term}%" for _ in columns]
+        # Normalize term for ISV column matching
+        normalized_term = normalize_text(term.lower())
 
-        query = f'SELECT rowid, * FROM dictionary WHERE {like_conditions}'
+        # Build LIKE conditions for substring matching across all columns
+        # For ISV, search the normalized column; for others, use original term
+        like_conditions = []
+        like_values = []
+
+        for col in columns:
+            if col == 'isv':
+                # Search normalized ISV column with normalized term
+                like_conditions.append('"isv_normalized" LIKE ?')
+                like_values.append(f"%{normalized_term}%")
+            else:
+                like_conditions.append(f'"{col}" LIKE ?')
+                like_values.append(f"%{term}%")
+
+        query = f'SELECT rowid, * FROM dictionary WHERE {" OR ".join(like_conditions)}'
         cursor.execute(query, like_values)
 
         for row in cursor.fetchall():
@@ -337,6 +405,11 @@ Examples:
     if not args.words and not args.refresh:
         parser.print_help()
         return 1
+
+    # Check for schema updates
+    if DB_PATH.exists() and needs_schema_update():
+        print("Database schema update required. Refreshing...", file=sys.stderr)
+        args.refresh = True
 
     # Refresh cache if requested or if cache doesn't exist
     if args.refresh or not DB_PATH.exists():

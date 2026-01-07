@@ -11,15 +11,7 @@
   "plugins": [
     {
       "name": "interslavic",
-      "source": "./plugins/interslavic",
-      "description": "Translation between English, Slavic languages (RU, UK, PL, HR, CZ, BG, etc.), and Interslavic",
-      "version": "0.1.0",
-      "author": {
-        "name": "esultanik"
-      },
-      "category": "language",
-      "tags": ["translation", "slavic", "interslavic", "language"],
-      "license": "AGPL-3.0"
+      "source": "./plugins/interslavic"
     }
   ]
 }
