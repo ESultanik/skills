@@ -5,13 +5,15 @@
   },
   "metadata": {
     "description": "Evan Sultanik's personal Claude Code skills marketplace",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "pluginRoot": "./plugins"
   },
   "plugins": [
     {
       "name": "interslavic",
-      "source": "./plugins/interslavic"
+      "source": "./plugins/interslavic",
+      "category": "language",
+      "tags": ["translation", "slavic", "interslavic", "language"]
     }
   ]
 }

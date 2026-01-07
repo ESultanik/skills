@@ -1,9 +1,7 @@
 {
   "name": "interslavic",
   "description": "Translation between English, Slavic languages (RU, UK, PL, HR, CZ, BG, etc.), and Interslavic",
-  "category": "language",
-  "tags": ["translation", "slavic", "interslavic", "language"],
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": {
     "name": "Evan Sultanik"
   },
