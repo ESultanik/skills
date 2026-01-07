@@ -66,8 +66,9 @@ On first run, the script automatically downloads and indexes the dictionary. Thi
 
 ### Output Format
 
-The script outputs matching entries with translations in all available languages:
+The script outputs matching entries with translations in all available languages.
 
+**Human-readable output:**
 ```
 === Results for "water" (1 match) ===
 
@@ -76,12 +77,33 @@ The script outputs matching entries with translations in all available languages
   RU: вода
   UK: вода
   PL: woda
-  HR: voda
-  CS: voda
-  BG: вода
+  ...
 
 Total: 1 match
 ```
+
+**JSON output (recommended for translation):**
+```bash
+python ./translate.py --json water
+```
+```json
+[
+  {
+    "isv": "voda",
+    "addition": "(vody)",
+    "partofspeech": "f.",
+    "type": "1",
+    "en": "water",
+    "ru": "вода",
+    "uk": "вода",
+    "pl": "woda",
+    "intelligibility": "bg+ cs+ hr+ mk+ pl+ ru+ sk+ sl+ sr+ uk+",
+    "using_example": "Voda jest žitje!",
+    ...
+  }
+]
+```
+The JSON format includes all metadata fields useful for choosing the correct translation.
 
 ## Instructions for Translation
 
@@ -89,11 +111,11 @@ Total: 1 match
 
 When the user asks to translate text into Interslavic:
 
-1. **Look up every content word** in the input text using the dictionary:
+1. **Look up every content word** in the input text using the dictionary with JSON output:
    ```bash
-   python ./translate.py <word1> <word2> <word3> ...
+   python ./translate.py --json <word1> <word2> <word3> ...
    ```
-   Run the script on all words to find their Interslavic equivalents.
+   Run the script on all words to find their Interslavic equivalents. Use `--json` for structured output that includes metadata useful for translation.
 
 2. **Use Latin script by default.** Output Interslavic in Roman/Latin characters unless the user explicitly requests Cyrillic.
 
@@ -125,6 +147,38 @@ The dictionary uses substring matching, so searches may return multiple entries.
 - Part of speech (partofspeech field)
 - Semantic context
 - Frequency (higher frequency words are more common)
+
+## Key Dictionary Fields
+
+When using `--json` output, entries include these useful fields for translation:
+
+### `partofspeech`
+Grammatical category of the word. Common values:
+- `m.` / `f.` / `n.` - masculine/feminine/neuter noun
+- `adj.` - adjective
+- `v.tr.` / `v.intr.` - transitive/intransitive verb
+- `pf.` / `ipf.` - perfective/imperfective aspect
+- `conj.` - conjunction
+- `prep.` - preposition
+- `adv.` - adverb
+
+### `intelligibility`
+Cross-Slavic intelligibility ratings showing how well the word is understood across languages. Format: `bg+ cs+ hr+ ru-` where language codes have `+` (well understood) or `-` (less understood). Prefer entries with more `+` ratings for broader comprehension.
+
+### `using_example`
+Example sentence showing the word in context. Helps disambiguate meaning when multiple entries match a search term.
+
+### `type`
+Entry classification indicating word status. Values (inferred from distribution analysis):
+- `1` (74% of entries) - Standard/core vocabulary - **prefer these for translation**
+- `2` (18%) - Less common or alternate forms
+- `3` (2.4%) - Specialized/technical vocabulary
+- `4` (0.2%) - Rare or archaic forms
+- `5` (0.7%) - Neologisms/newer additions
+- `#1`, `#2`, `#3` - Numbered variant markers
+- (empty) - Unclassified entries
+
+*Note: Type meanings are inferred from analyzing entry patterns, not from official documentation.*
 
 ## Important: Non-Standard ISV Characters
 
