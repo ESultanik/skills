@@ -2,15 +2,16 @@
 
 ## Project structure and module organization
 
-This repository is the `esultanik-skills` Claude Code plugin marketplace.
+This repository is the `esultanik-skills` marketplace for Claude Code and Codex.
 
 - `.claude-plugin/marketplace.json` registers available plugins and their source paths.
 - `plugins/<plugin-name>/.claude-plugin/plugin.json` defines each plugin's metadata.
-- `plugins/interslavic/commands/` contains `/lookup` and `/translate` command definitions.
+- `plugins/github-issues/skills/fix-issues/` contains the batch issue workflow and runtime references.
+- `plugins/interslavic/skills/lookup/` contains the standalone dictionary lookup skill.
 - `plugins/interslavic/skills/translate/` contains `SKILL.md` and the standard-library
   dictionary tool, `translate.py`.
 - Root and plugin `README.md` files document installation and usage; `CONTRIBUTING.md`
-  describes adding plugins. There are no dedicated test or asset directories.
+  describes adding plugins. Plugin `assets/` directories contain marketplace icons.
 
 ## Development and validation commands
 
@@ -24,9 +25,11 @@ uv run --python 3.13 --no-project -m json.tool .claude-plugin/marketplace.json
 ```
 
 These commands inspect options, exercise a lookup, and validate marketplace
-JSON syntax. Validate edited plugin manifests with `json.tool` too. In Claude Code, use
+JSON syntax. Run `prek run --all-files` and validate edited plugins with
+`claude plugin validate --strict plugins/<plugin-name>`. In Claude Code, use
 `/plugin marketplace add esultanik/skills` and `/plugin install interslavic@esultanik-skills`
-to check installation.
+to check installation. In Codex CLI, use `codex plugin marketplace add ESultanik/skills`
+and `codex plugin add interslavic@esultanik-skills`.
 
 ## Coding style and naming conventions
 
@@ -35,7 +38,8 @@ type annotations, and Google-style docstrings for non-trivial public functions. 
 within 100 characters. Prefer standard-library solutions; justify new dependencies.
 Use two-space JSON indentation and lowercase, hyphenated plugin and skill directory names.
 Keep skill metadata in YAML front matter, followed by an H1 and a `## Contents` section.
-No formatter, linter, or type-checker configuration is currently checked in.
+The prek configuration uses offline built-in syntax and hygiene checks. No Python
+formatter, linter, or type-checker configuration is currently checked in.
 
 ## Testing guidelines
 
@@ -43,7 +47,8 @@ No automated test framework or coverage threshold is defined. For lookup changes
 plain-text and JSON output, language filtering, diacritic normalization, duplicate matches,
 empty results, and download failures. Use controlled CSV data and temporary cache paths for
 repeatable tests. If adding tests, place `test_*.py` files under `tests/` and document their
-run command. For command or skill edits, exercise the affected Claude Code workflow.
+run command. For skill edits, exercise the affected workflow in both runtimes. Use fixtures
+and temporary Git repositories for batch workflow checks without live GitHub mutations.
 
 ## Commit and pull request guidelines
 

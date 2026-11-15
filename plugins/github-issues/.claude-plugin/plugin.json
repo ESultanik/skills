@@ -1,0 +1,10 @@
+{
+  "name": "github-issues",
+  "description": "Plan and fix GitHub issue batches with isolated workers and native PR stacks",
+  "version": "0.1.0",
+  "author": {
+    "name": "Evan Sultanik"
+  },
+  "license": "AGPL-3.0",
+  "skills": ["./skills/"]
+}
