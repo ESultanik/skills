@@ -1,66 +1,53 @@
-# Interslavic Translation Plugin
+# Interslavic translation
 
-A Claude Code plugin for translating between English, major Slavic languages, and Interslavic.
+Translate between Interslavic, English, and other Slavic languages, or look up
+vocabulary, in Claude Code and Codex. The bundled Python dictionary helper uses
+only the standard library and supports Python 3.9 or later. Repository validation
+uses Python 3.13 through `uv`.
 
-## Supported Languages
+## Install
 
-| Code | Language |
-|------|----------|
-| ISV | Interslavic |
-| EN | English |
-| RU | Russian |
-| BE | Belarusian |
-| UK | Ukrainian |
-| PL | Polish |
-| CS | Czech |
-| SK | Slovak |
-| SL | Slovenian |
-| HR | Croatian |
-| SR | Serbian |
-| MK | Macedonian |
-| BG | Bulgarian |
-| CU | Old Church Slavonic |
-| DE | German |
-| NL | Dutch |
-| EO | Esperanto |
+Claude Code:
 
-## Installation
-
-```
+```text
 /plugin marketplace add esultanik/skills
 /plugin install interslavic@esultanik-skills
 ```
 
-## Commands
+Codex CLI:
 
-### /lookup
-
-Look up words in the Interslavic dictionary.
-
-```
-/lookup <word> [word2] [word3] ...
+```sh
+codex plugin marketplace add ESultanik/skills
+codex plugin add interslavic@esultanik-skills
 ```
 
-Shows the ISV form, part of speech, English translation, and intelligibility ratings across Slavic languages.
+## Look up words
 
-### /translate
+Use `/interslavic:lookup water fire` in Claude Code or
+`$interslavic:lookup water fire` in Codex.
+Results show the Interslavic form, part of speech, English meaning,
+intelligibility ratings, and related Slavic forms.
 
-Translate text to or from Interslavic.
+## Translate text
 
-```
-/translate <text to translate>
-```
+Use `/interslavic:translate Hello, world` in Claude Code or
+`$interslavic:translate Hello, world` in Codex. You can also select either skill
+in Codex's `/skills` menu.
+Specify the target language when you want to override inferred direction.
 
-Auto-detects translation direction:
-- Latin text with ISV markers (č, š, ž, ě) → translates from Interslavic to English
-- Cyrillic text → detects source language and translates into Interslavic
-- Other Latin text → translates into Interslavic
+The skill looks up source vocabulary and applies Interslavic grammar. It uses
+Latin-script Interslavic unless you request Cyrillic. Recognizable Interslavic
+defaults to English translation; other input defaults to Interslavic.
 
-## Skills
+Supported dictionary languages are ISV, EN, RU, UK, BE, PL, CS, SK, SL, HR, SR, MK,
+BG, CU, DE, NL, and EO.
 
-### translate
+## Dictionary cache
 
-Translate text between supported languages.
+The first lookup downloads the public dictionary into `~/.cache/interslavic/`.
+Later lookups use SQLite. The helper's `--refresh` flag replaces the cache and
+`--info` reports its metadata. Both skills locate the helper relative to their
+installed package, so you can invoke them from any repository.
 
 ## License
 

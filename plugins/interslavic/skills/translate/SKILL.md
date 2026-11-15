@@ -1,26 +1,77 @@
 ---
-description: Translate between English, Slavic languages, and Interslavic using a comprehensive cross-language dictionary
-tags:
-  - translation
-  - slavic
-  - interslavic
-  - language
-  - dictionary
+name: translate
+description: >-
+  Translate text between Interslavic, English, and other Slavic languages using
+  the bundled cross-language dictionary. Use for text translation or vocabulary
+  selection during translation; use lookup for a standalone dictionary search.
 ---
 
-# Interslavic Translation Skill
+# Translate Interslavic
 
-This skill provides translation between English, major Slavic languages, and Interslavic using the comprehensive Interslavic dictionary.
+## Contents
 
-## Supported Languages
+- [Translation workflow](#translation-workflow)
+- [Dictionary tool](#dictionary-tool)
+- [Supported languages](#supported-languages)
+- [Dictionary fields](#dictionary-fields)
+- [Standard Interslavic characters](#standard-interslavic-characters)
+
+## Translation workflow
+
+Use the user's text and requested target language as input. Ask for missing text
+or an ambiguous target. Otherwise, infer direction: recognizable Interslavic words
+or Latin ISV markers such as č, š, ž, and ě suggest translation from Interslavic to
+English; Cyrillic suggests a source such as Russian, Ukrainian, Bulgarian, or
+Serbian; other Latin text defaults to translation into Interslavic. A marker alone
+is not conclusive because other Slavic languages share these characters.
+
+Look up every content word when translating into Interslavic. For translation
+from Interslavic, look up the source vocabulary to choose the target meaning.
+Use JSON output and batch searches when useful. `--lang CODE` keeps results with
+a translation in that language; it does not restrict the searched columns.
+The tool performs substring searches: inspect competing matches, parts of speech,
+meanings, and usage examples before choosing a form.
+
+Use Latin script for Interslavic unless the user requests Cyrillic. Apply
+Interslavic grammar, inflection, and word order after choosing dictionary forms;
+the dictionary is not a grammar engine. Prefer forms broadly understandable
+across Slavic languages, using the intelligibility information when available.
+Do not invent a dictionary match when the tool fails or finds none; explain the
+gap and qualify any proposed translation.
+
+Return the translation and, when useful, two or three key vocabulary choices.
+
+## Dictionary tool
+
+Resolve `translate.py` from the directory containing this installed `SKILL.md`,
+not from the user's working directory. Use the skill path supplied by the host to
+obtain the absolute helper path. This works in both Claude Code and Codex without
+`${CLAUDE_PLUGIN_ROOT}`. Set `dictionary_tool` to that resolved path and quote it
+and every user-provided argument; never evaluate the text as shell code.
+
+The helper uses Python's standard library. These examples use Python 3.13 via `uv`:
+
+```sh
+uv run --python 3.13 --no-project "$dictionary_tool" --json water fire
+uv run --python 3.13 --no-project "$dictionary_tool" --json --lang ru "вода"
+uv run --python 3.13 --no-project "$dictionary_tool" --info
+```
+
+An existing Python 3.9+ interpreter can run the helper directly when `uv` is
+unavailable. Do not install dependencies or change the target repository to run it.
+The first lookup downloads the public dictionary into `~/.cache/interslavic/`;
+later lookups use SQLite. `--refresh` replaces this cache and `--info` reports its
+metadata. Explain download failures instead of claiming a successful lookup.
+
+## Supported languages
 
 | Code | Language |
-|------|----------|
+| --- | --- |
 | ISV | Interslavic |
 | EN | English |
 | RU | Russian |
-| BE | Belarusian |
 | UK | Ukrainian |
+| BE | Belarusian |
 | PL | Polish |
 | CS | Czech |
 | SK | Slovak |
@@ -34,164 +85,29 @@ This skill provides translation between English, major Slavic languages, and Int
 | NL | Dutch |
 | EO | Esperanto |
 
-## Dictionary Lookup Tool
+## Dictionary fields
 
-A Python script is provided at `./translate.py` for searching the Interslavic dictionary. The script downloads and caches the dictionary locally for fast lookups.
+JSON output contains dictionary records with language columns such as `isv`,
+`en`, and `ru`. Use `partofspeech` to distinguish nouns, verbs, adjectives, and
+aspect, and `using_example` to clarify meaning. `intelligibility` contains
+language markers such as `bg+` and `ru-`, indicating greater or lower expected
+intelligibility for those languages.
 
-### Usage
+The `type` field appears to distinguish standard/core vocabulary (`1`) from less
+common, specialized, archaic, or newer entries. This interpretation is inferred,
+not an official guarantee; prioritize meaning and usage evidence over the code.
 
-```bash
-# Basic search (substring matching)
-python ./translate.py water
+## Standard Interslavic characters
 
-# Search multiple words
-python ./translate.py water fire earth
+Some source entries contain non-standard characters. Normalize these when
+producing Latin-script Interslavic, preserving standard č, š, ž, and ě:
 
-# Filter by language
-python ./translate.py --lang ru вода
-
-# Output as JSON
-python ./translate.py --json water
-
-# Refresh the cached dictionary
-python ./translate.py --refresh
-
-# Show cache info
-python ./translate.py --info
-```
-
-### First Run
-
-On first run, the script automatically downloads and indexes the dictionary. This requires an internet connection. Subsequent searches use the local cache.
-
-### Output Format
-
-The script outputs matching entries with translations in all available languages.
-
-**Human-readable output:**
-```
-=== Results for "water" (1 match) ===
-
-[ISV] voda
-  EN: water
-  RU: вода
-  UK: вода
-  PL: woda
-  ...
-
-Total: 1 match
-```
-
-**JSON output (recommended for translation):**
-```bash
-python ./translate.py --json water
-```
-```json
-[
-  {
-    "isv": "voda",
-    "addition": "(vody)",
-    "partofspeech": "f.",
-    "type": "1",
-    "en": "water",
-    "ru": "вода",
-    "uk": "вода",
-    "pl": "woda",
-    "intelligibility": "bg+ cs+ hr+ mk+ pl+ ru+ sk+ sl+ sr+ uk+",
-    "using_example": "Voda jest žitje!",
-    ...
-  }
-]
-```
-The JSON format includes all metadata fields useful for choosing the correct translation.
-
-## Instructions for Translation
-
-### Translating INTO Interslavic
-
-When the user asks to translate text into Interslavic:
-
-1. **Look up every content word** in the input text using the dictionary with JSON output:
-   ```bash
-   python ./translate.py --json <word1> <word2> <word3> ...
-   ```
-   Run the script on all words to find their Interslavic equivalents. Use `--json` for structured output that includes metadata useful for translation.
-
-2. **Use Latin script by default.** Output Interslavic in Roman/Latin characters unless the user explicitly requests Cyrillic.
-
-3. **For grammar and sentence construction:**
-   - The dictionary provides individual word translations, not grammatical rules
-   - When unsure about correct Interslavic grammar (verb conjugations, noun declensions, word order), draw on your knowledge of other Slavic languages
-   - Aim for constructions that maximize mutual intelligibility across the Slavic language family
-   - When in doubt, prefer forms that are common across multiple Slavic languages (e.g., SVO word order is widely understood)
-
-4. **Handle ambiguity:** If multiple dictionary entries match, choose the one whose meaning best fits the context. Consider the part of speech (noun, verb, adjective) indicated in the results.
-
-### Translating FROM Interslavic
-
-When translating Interslavic text to another language:
-
-1. Look up ISV words in the dictionary to find equivalents in the target language
-2. The dictionary includes translations for EN, RU, UK, PL, CS, HR, BG, and many other languages
-
-### Single Word Lookups
-
-For simple "How do you say X?" questions:
-
-1. Run: `python ./translate.py <word>`
-2. Present the ISV translation along with related Slavic forms if helpful for context
-
-### Handling Multiple Matches
-
-The dictionary uses substring matching, so searches may return multiple entries. Review all matches and select the most appropriate based on:
-- Part of speech (partofspeech field)
-- Semantic context
-- Frequency (higher frequency words are more common)
-
-## Key Dictionary Fields
-
-When using `--json` output, entries include these useful fields for translation:
-
-### `partofspeech`
-Grammatical category of the word. Common values:
-- `m.` / `f.` / `n.` - masculine/feminine/neuter noun
-- `adj.` - adjective
-- `v.tr.` / `v.intr.` - transitive/intransitive verb
-- `pf.` / `ipf.` - perfective/imperfective aspect
-- `conj.` - conjunction
-- `prep.` - preposition
-- `adv.` - adverb
-
-### `intelligibility`
-Cross-Slavic intelligibility ratings showing how well the word is understood across languages. Format: `bg+ cs+ hr+ ru-` where language codes have `+` (well understood) or `-` (less understood). Prefer entries with more `+` ratings for broader comprehension.
-
-### `using_example`
-Example sentence showing the word in context. Helps disambiguate meaning when multiple entries match a search term.
-
-### `type`
-Entry classification indicating word status. Values (inferred from distribution analysis):
-- `1` (74% of entries) - Standard/core vocabulary - **prefer these for translation**
-- `2` (18%) - Less common or alternate forms
-- `3` (2.4%) - Specialized/technical vocabulary
-- `4` (0.2%) - Rare or archaic forms
-- `5` (0.7%) - Neologisms/newer additions
-- `#1`, `#2`, `#3` - Numbered variant markers
-- (empty) - Unclassified entries
-
-*Note: Type meanings are inferred from analyzing entry patterns, not from official documentation.*
-
-## Important: Non-Standard ISV Characters
-
-The source dictionary occasionally contains words with non-standard characters borrowed from other Slavic languages (e.g., Polish `ę`, `ą`). When translating INTO Interslavic, replace these with standard Interslavic equivalents:
-
-| Non-standard | Replace with |
-|--------------|--------------|
-| ę | e |
-| ą | a |
+| Source | Replacement |
+| --- | --- |
+| ę, ė | e |
+| ą, å | a |
 | ų | u |
 | ȯ | o |
-| ė | e |
-| å | a |
 | ń | n |
 | ť | t |
 | ľ | l |
@@ -200,14 +116,3 @@ The source dictionary occasionally contains words with non-standard characters b
 | ś | s |
 | ź | z |
 | ć | c |
-
-Standard ISV characters (`č`, `š`, `ž`, `ě`) should be preserved.
-
-## About Interslavic
-
-Interslavic (Medžuslovjansky) is a zonal constructed language designed to be mutually intelligible to speakers of Slavic languages. It serves as a lingua franca for the Slavic world, similar to how Latin functions in Romance language contexts.
-
-Key features:
-- Based on common Slavic vocabulary and grammar
-- Uses both Latin and Cyrillic scripts
-- Understandable to speakers of Russian, Polish, Czech, Croatian, and other Slavic languages without prior study
